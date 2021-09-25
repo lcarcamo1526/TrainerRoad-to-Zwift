@@ -1,9 +1,11 @@
 import json
 import logging
+from http import HTTPStatus
 from io import StringIO
 
 import requests
 from lxml import etree
+from requests.models import Response
 
 logger = logging.getLogger(__name__)
 
@@ -214,7 +216,7 @@ class TrainerRoad:
         data = json.loads(res.text)
         logger.debug(json.dumps(data, indent=4, sort_keys=True))
 
-        logger.info('Recieved info on {} workouts'.format(len(data)))
+        logger.info('Received info on {} workouts'.format(len(data)))
 
         return data
 
@@ -231,7 +233,7 @@ class TrainerRoad:
 
         return data
 
-    def get_training_plans_workouts(self, start_date, end_date):
+    def get_training_plans_workouts(self, start_date, end_date) -> dict:
         """
 
         :param start_date: date must be formatted as month/day/year
@@ -240,5 +242,7 @@ class TrainerRoad:
         """
         params = f'{self.login_name}?startDate={start_date}&endDate={end_date}'
         endpoint = self._calendar_url + params
-        res = self._session.get(endpoint)
-        return res
+        response: Response = self._session.get(endpoint)
+        if response.status_code == HTTPStatus.OK:
+            calendar: dict = response.json()
+            return calendar
