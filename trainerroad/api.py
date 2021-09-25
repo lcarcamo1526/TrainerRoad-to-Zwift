@@ -1,10 +1,10 @@
-import requests
 import json
-import lxml.html
-from lxml import etree
-from io import StringIO, BytesIO
-
 import logging
+from io import StringIO
+
+import requests
+from lxml import etree
+
 logger = logging.getLogger(__name__)
 
 
@@ -12,17 +12,20 @@ class TrainerRoad:
     _ftp = 'Ftp'
     _weight = 'Weight'
     _units_metric = 'kmh'
+    _login_name = 'LoginName'
     _units_imperial = 'mph'
     _input_data_names = (_ftp, _weight, 'Marketing')
     _select_data_names = ('TimeZoneId', 'IsMale', 'IsPrivate',
                           'Units', 'IsVirtualPowerEnabled', 'TimeZoneId')
     _numerical_verify = (_ftp, _weight)
     _string_verify = _select_data_names + ('Marketing',)
-    _login_url = 'https://www.trainerroad.com/login'
-    _logout_url = 'https://www.trainerroad.com/logout'
-    _rider_url = 'https://www.trainerroad.com/profile/rider-information'
+    _login_url = 'https://www.trainerroad.com/app/login'
+    _logout_url = 'https://www.trainerroad.com/app/logout'
+    _member_info = "https://www.trainerroad.com/app/api/member-info"
+    _rider_url = 'https://www.trainerroad.com/app/profile/rider-information'
     _download_tcx_url = 'http://www.trainerroad.com/cycling/rides/download'
     _workouts_url = 'https://api.trainerroad.com/api/careerworkouts'
+    _calendar_url = "https://www.trainerroad.com/app/api/calendar/activities/"
     _rvt = '__RequestVerificationToken'
 
     def __init__(self, username, password):
@@ -46,6 +49,8 @@ class TrainerRoad:
                                .format(r.status_code))
 
         logger.info('Logged into TrainerRoad as "{}"'.format(self._username))
+        print('Logged into TrainerRoad as "{}"'.format(self._username))
+        self.r = r
 
     def disconnect(self):
         r = self._session.get(self._logout_url, allow_redirects=False)
@@ -101,6 +106,13 @@ class TrainerRoad:
                                .format(r.status_code))
 
         return r
+
+    def _read_member_info(self):
+        r = self._get(self._member_info)
+        if r.status_code == 200:
+            return r.json()
+        else:
+            raise RuntimeError('Failed to get member info')
 
     def _read_profile(self):
         r = self._get(self._rider_url)
@@ -159,7 +171,7 @@ class TrainerRoad:
         return
 
     @property
-    def ftp(self):
+    def ftp(self) -> int:
         values, token = self._read_profile()
         return values[self._ftp]
 
@@ -167,10 +179,19 @@ class TrainerRoad:
     def ftp(self, value):
         self._write_profile({self._ftp: value})
 
+    # def loginName(self):
+
     @property
-    def weight(self):
+    def weight(self) -> int:
         values, token = self._read_profile()
         return values[self._weight]
+
+    @property
+    def login_name(self) -> str:
+        r = self._read_member_info()
+        if bool(r):
+            login_name: str = r.get(self._login_name)
+            return login_name.lower()
 
     @weight.setter
     def weight(self, value):
@@ -197,7 +218,6 @@ class TrainerRoad:
 
         return data
 
-
     def get_workout(self, guid):
         res = self._session.get(self._workout_url
                                 + '?guid={}'.format(str(guid)))
@@ -210,3 +230,15 @@ class TrainerRoad:
         logger.debug(json.dumps(data, indent=4, sort_keys=True))
 
         return data
+
+    def get_training_plans_workouts(self, start_date, end_date):
+        """
+
+        :param start_date: date must be formatted as month/day/year
+        :param end_date: date must be formatted as month/day/year
+        :return:
+        """
+        params = f'{self.login_name}?startDate={start_date}&endDate={end_date}'
+        endpoint = self._calendar_url + params
+        res = self._session.get(endpoint)
+        return res
