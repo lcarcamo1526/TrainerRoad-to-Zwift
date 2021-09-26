@@ -1,3 +1,5 @@
+import asyncio
+import collections.abc
 import datetime as dt
 import json
 import logging
@@ -8,6 +10,8 @@ import pandas as pd
 import requests
 from lxml import etree
 from requests.models import Response
+
+from trainerroad.Utils.Warning import *
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +38,9 @@ class TrainerRoad:
     _download_tcx_url = 'http://www.trainerroad.com/cycling/rides/download'
     _workouts_url = 'https://api.trainerroad.com/api/careerworkouts'
     _calendar_url = "https://www.trainerroad.com/app/api/calendar/activities/"
+    _workout_details = "https://www.trainerroad.com/app/api/workoutdetails/{}"
+
+    # TODO move endpoints into singleton class
     _rvt = '__RequestVerificationToken'
 
     def __init__(self, username, password):
@@ -53,11 +60,11 @@ class TrainerRoad:
 
         if (r.status_code != 200) and (r.status_code != 302):
             # There was an error
+            # todo move warning into singleton class
             raise RuntimeError("Error loging in to TrainerRoad (Code {})"
                                .format(r.status_code))
 
-        logger.info('Logged into TrainerRoad as "{}"'.format(self._username))
-        print('Logged into TrainerRoad as "{}"'.format(self._username))
+        logger.info(WARNING_LOGGING_AS.format(self._username))
         self.r = r
 
     def disconnect(self):
@@ -246,6 +253,7 @@ class TrainerRoad:
         :param end_date: date must be formatted as month/day/year
         :return:
         """
+        # todo add async/await support and add parameters as key,value dict
         params = f'{self.login_name}?startDate={start_date}&endDate={end_date}'
         endpoint = self._calendar_url + params
         today = dt.datetime.now().strftime("%Y-%m-%d")
@@ -262,3 +270,19 @@ class TrainerRoad:
         else:
             raise RuntimeError('Unable to get training plan: (Code = {})'
                                .format(response.status_code))
+
+    async def _get_workout_detail(self, session, workout_id: str):
+        url = self._workout_details.format(workout_id)
+        async with session.get(url) as resp:
+            response = await resp.json()
+            return response
+
+    async def get_workouts_details(self, workouts: collections.abc.Iterable):
+        async with self._session as session:
+            tasks = []
+            for workout in workouts:
+                tasks.append(asyncio.ensure_future(self._get_workout_detail(session, workout_id=workout)))
+
+            output = await asyncio.gather(*tasks)
+        return output
+
