@@ -1,8 +1,10 @@
+import datetime as dt
 import json
 import logging
 from http import HTTPStatus
 from io import StringIO
 
+import pandas as pd
 import requests
 from lxml import etree
 from requests.models import Response
@@ -15,6 +17,10 @@ class TrainerRoad:
     _weight = 'Weight'
     _units_metric = 'kmh'
     _login_name = 'LoginName'
+    _date = "Date"
+    _activity_id = "Activity.Id"
+    _activity_workout_name = "Name"
+
     _units_imperial = 'mph'
     _input_data_names = (_ftp, _weight, 'Marketing')
     _select_data_names = ('TimeZoneId', 'IsMale', 'IsPrivate',
@@ -233,7 +239,7 @@ class TrainerRoad:
 
         return data
 
-    def get_training_plans_workouts(self, start_date, end_date) -> dict:
+    def get_training_plans(self, start_date, end_date) -> pd.DataFrame:
         """
 
         :param start_date: date must be formatted as month/day/year
@@ -242,7 +248,17 @@ class TrainerRoad:
         """
         params = f'{self.login_name}?startDate={start_date}&endDate={end_date}'
         endpoint = self._calendar_url + params
+        today = dt.datetime.now().strftime("%Y-%m-%d")
+
         response: Response = self._session.get(endpoint)
         if response.status_code == HTTPStatus.OK:
             calendar: dict = response.json()
-            return calendar
+            calendar_df = pd.json_normalize(calendar)[[self._date, self._activity_workout_name, self._activity_id]]
+            calendar_df[self._date] = pd.to_datetime(calendar_df[self._date])
+            calendar_df = calendar_df.loc[calendar_df[self._date] >= today]
+            calendar_df.sort_values(self._date, ascending=True, inplace=True, ignore_index=True)
+            return calendar_df
+
+        else:
+            raise RuntimeError('Unable to get training plan: (Code = {})'
+                               .format(response.status_code))
