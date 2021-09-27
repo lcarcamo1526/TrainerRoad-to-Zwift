@@ -1,6 +1,5 @@
-import asyncio
-import collections.abc
 import datetime as dt
+import http
 import json
 import logging
 from http import HTTPStatus
@@ -9,7 +8,6 @@ from io import StringIO
 import pandas as pd
 import requests
 from lxml import etree
-from requests.models import Response
 
 from trainerroad.Utils.Warning import *
 
@@ -65,7 +63,6 @@ class TrainerRoad:
                                .format(r.status_code))
 
         logger.info(WARNING_LOGGING_AS.format(self._username))
-        self.r = r
 
     def disconnect(self):
         r = self._session.get(self._logout_url, allow_redirects=False)
@@ -104,7 +101,7 @@ class TrainerRoad:
 
         r = self._session.get(url)
 
-        if r.status_code != 200:
+        if r.status_code != http.HTTPStatus.OK:
             raise RuntimeError("Error getting info from TrainerRoad (Code {})"
                                .format(r.status_code))
 
@@ -123,9 +120,9 @@ class TrainerRoad:
         return r
 
     def _read_member_info(self):
-        r = self._get(self._member_info)
-        if r.status_code == 200:
-            return r.json()
+        response = self._session.get(self._member_info)
+        if response.status_code == HTTPStatus.OK:
+            return response.json()
         else:
             raise RuntimeError('Failed to get member info')
 
@@ -258,10 +255,12 @@ class TrainerRoad:
         endpoint = self._calendar_url + params
         today = dt.datetime.now().strftime("%Y-%m-%d")
 
-        response: Response = self._session.get(endpoint)
+        response = self._session.get(endpoint)
         if response.status_code == HTTPStatus.OK:
             calendar: dict = response.json()
             calendar_df = pd.json_normalize(calendar)[[self._date, self._activity_workout_name, self._activity_id]]
+            calendar_df.dropna(inplace=True)
+            calendar_df[self._activity_id] = calendar_df[self._activity_id].astype(int)
             calendar_df[self._date] = pd.to_datetime(calendar_df[self._date])
             calendar_df = calendar_df.loc[calendar_df[self._date] >= today]
             calendar_df.sort_values(self._date, ascending=True, inplace=True, ignore_index=True)
@@ -271,18 +270,12 @@ class TrainerRoad:
             raise RuntimeError('Unable to get training plan: (Code = {})'
                                .format(response.status_code))
 
-    async def _get_workout_detail(self, session, workout_id: str):
+    def _get_workout_detail(self, workout_id: str):
         url = self._workout_details.format(workout_id)
-        async with session.get(url) as resp:
-            response = await resp.json()
-            return response
+        return self._session.get(url)
 
-    async def get_workouts_details(self, workouts: collections.abc.Iterable):
-        async with self._session as session:
-            tasks = []
-            for workout in workouts:
-                tasks.append(asyncio.ensure_future(self._get_workout_detail(session, workout_id=workout)))
-
-            output = await asyncio.gather(*tasks)
+    def get_workouts_details(self, *workouts):
+        output = []
+        for workout in workouts:
+            output.append(self._get_workout_detail(workout_id=workout))
         return output
-
