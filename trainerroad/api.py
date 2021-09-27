@@ -1,3 +1,4 @@
+import asyncio
 import datetime as dt
 import http
 import json
@@ -5,8 +6,10 @@ import logging
 from http import HTTPStatus
 from io import StringIO
 
+import aiohttp
 import pandas as pd
 import requests
+from aiohttp import BasicAuth
 from lxml import etree
 
 from trainerroad.Utils.Warning import *
@@ -270,12 +273,27 @@ class TrainerRoad:
             raise RuntimeError('Unable to get training plan: (Code = {})'
                                .format(response.status_code))
 
-    def _get_workout_detail(self, workout_id: str):
+    async def _get_workout_detail(self, session, workout_id: str):
         url = self._workout_details.format(workout_id)
-        return self._session.get(url)
+        async with session.get(url) as resp:
+            response = await resp.json()
+            return response
 
-    def get_workouts_details(self, *workouts):
-        output = []
-        for workout in workouts:
-            output.append(self._get_workout_detail(workout_id=workout))
-        return output
+    async def get_workouts_details(self, workouts):
+        tasks = []
+        async with aiohttp.ClientSession(auth=BasicAuth(login=self._username, password=self._password)) as session:
+            data = {'Username': self._username,
+                    'Password': self._password}
+            async with session.post(self._login_url, data=data) as response:
+                if response.status == HTTPStatus.OK:
+                    logger.info(WARNING_LOGGING_AS.format(self._username))
+
+                    for workout in workouts:
+                        tasks.append(asyncio.ensure_future(self._get_workout_detail(session, workout_id=workout)))
+
+                    output = await asyncio.gather(*tasks)
+                    return output
+
+                else:
+                    raise RuntimeError("Error logging in to TrainerRoad (Code {})"
+                                       .format(response.status))
