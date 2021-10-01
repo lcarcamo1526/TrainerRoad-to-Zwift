@@ -1,3 +1,4 @@
+import datetime as dt
 import logging
 import os
 from collections.abc import Iterable
@@ -61,7 +62,8 @@ class Zwift:
 
                         doc_str = doc.toprettyxml(indent="\t")
 
-                        filename = f"{date}_{workout_name}.zwo" if include_date else f"{workout_name}.zwo"
+                        date: dt.datetime = date.strftime("%d %b %Y")
+                        filename = f"{date} - {workout_name}.zwo" if include_date else f"{workout_name}.zwo"
                         out_path = os.path.join(self.output_path, filename)
                         try:
                             with open(out_path, "w") as f:
