@@ -50,14 +50,14 @@ class Workout:
             new_interval = steady_interval
 
         elif cooldown and warmup is False:
-            cooldown_interval = document.createElement('Cooldown')
+            cooldown_interval = document.createElement(COOLDOWN)
             cooldown_interval.setAttribute(DURATION, duration)
-            cooldown_interval.setAttribute('PowerHigh', power)
-            cooldown_interval.setAttribute('PowerLow', power)
+            cooldown_interval.setAttribute(POWER_HIGH, power)
+            cooldown_interval.setAttribute(POWER_LOW, power)
             new_interval = cooldown_interval
 
         elif cooldown is False and warmup:
-            warmup_interval = document.createElement('Warmup')
+            warmup_interval = document.createElement(WARMUP)
             warmup_interval.setAttribute(DURATION, duration)
             warmup_interval.setAttribute(POWER_HIGH, power)
             warmup_interval.setAttribute(POWER_LOW, power)
@@ -74,9 +74,9 @@ class Workout:
         :param document:
         :return:
         """
-        workout_name = details.get("WorkoutName")
-        description = details.get("WorkoutDescription")
-        author_section = document.createElement('author')
+        workout_name = details.get(WORKOUT_NAME)
+        description = details.get(WORKOUT_DESC)
+        author_section = document.createElement(AUTHOR)
         author_section.appendChild(document.createTextNode(TRAINER_ROAD))
         description_section = document.createElement(DESCRIPTION)
         description_section.appendChild(document.createTextNode(description))
