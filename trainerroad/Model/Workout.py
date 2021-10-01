@@ -1,3 +1,4 @@
+import logging
 from collections.abc import Iterable
 from collections.abc import Mapping
 from xml.dom import minidom
@@ -19,9 +20,9 @@ class Workout:
         :param parent_section:
         :return:
         """
-        workouts = workouts[1:]
-        for index, interval in enumerate(workouts):
-            cooldown = index == len(workouts) - 1
+        workouts_ = workouts[1:]
+        for index, interval in enumerate(workouts_):
+            cooldown = index == len(workouts_) - 1
             warmup = index == 0
             self.build_workout(document=document, section=section, interval=interval, warmup=warmup,
                                cooldown=cooldown)
@@ -62,8 +63,16 @@ class Workout:
             warmup_interval.setAttribute(POWER_HIGH, power)
             warmup_interval.setAttribute(POWER_LOW, power)
             new_interval = warmup_interval
+        else:
+            logging.info(
+                f" Warmup: {warmup} Cooldown: {cooldown} Power: {power}, Start: {start}, End: {end}, Duration {duration}")
+            steady_interval = document.createElement(STEADY_STATE)
+            steady_interval.setAttribute(DURATION, duration)
+            steady_interval.setAttribute(POWER, power)
+            new_interval = steady_interval
 
-        section.appendChild(new_interval)
+            section.appendChild(new_interval)
+
         return section
 
     def add_workout_details(self, details, section: Element, document: minidom.Document):
