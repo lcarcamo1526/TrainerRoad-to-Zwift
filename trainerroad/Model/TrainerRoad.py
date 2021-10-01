@@ -253,7 +253,6 @@ class TrainerRoad:
         :param end_date: date must be formatted as month/day/year
         :return:
         """
-        # todo add async/await support and add parameters as key,value dict
         params = f'{self.login_name}?startDate={start_date}&endDate={end_date}'
         endpoint = self._calendar_url + params
         today = dt.datetime.now().strftime("%Y-%m-%d")
@@ -279,7 +278,7 @@ class TrainerRoad:
             response = await resp.json()
             return response
 
-    async def get_workouts_details(self, workouts):
+    async def get_workouts_details(self, workouts) -> list:
         tasks = []
         async with aiohttp.ClientSession(auth=BasicAuth(login=self._username, password=self._password)) as session:
             data = {'Username': self._username,
