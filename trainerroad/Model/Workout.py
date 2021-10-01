@@ -71,7 +71,7 @@ class Workout:
             steady_interval.setAttribute(POWER, power)
             new_interval = steady_interval
 
-            section.appendChild(new_interval)
+        section.appendChild(new_interval)
 
         return section
 
