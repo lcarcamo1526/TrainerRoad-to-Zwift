@@ -59,7 +59,7 @@ class Zwift:
         plan_dict = create_plan_dictionary(response)
 
         for date, workout_id in zip(calendar[DATE], calendar[ACTIVITY_ID]):
-            workout_plan = plan_dict
+            workout_plan = plan_dict.copy()
             workout = workout_plan.get(workout_id)
 
             if bool(workout):
@@ -68,10 +68,13 @@ class Zwift:
                 date: dt.datetime = date.strftime("%Y-%m-%d")
                 workout_name = workout_details.get(WORKOUT_NAME)
                 if include_date:
-                    workout_name = f"{date} {workout_name}"
-                    workout_details[WORKOUT_NAME] = workout_name
+                    new_workout_details = workout_details.copy()
+                    new_workout_name = f"{date} {workout_name}"
+                    new_workout_details[WORKOUT_NAME] = new_workout_name
+                    workout_details = new_workout_details
+                    workout_name = new_workout_name
 
-                if bool(workout_interval) and bool(workout_name):
+                if bool(workout_interval):
                     try:
                         doc = self.workout_manager.convert_workout(interval=workout_interval,
                                                                    workout_details=workout_details)
