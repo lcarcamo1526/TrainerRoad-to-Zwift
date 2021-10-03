@@ -63,7 +63,11 @@ class Zwift:
             if bool(workout):
                 workout_details = workout.get(DETAILS)
                 workout_interval = workout.get(INTERVAL)
+                date: dt.datetime = date.strftime("%Y-%m-%d")
                 workout_name = workout_details.get(WORKOUT_NAME)
+                if include_date:
+                    workout_name = f"{date} {workout_name}"
+                    workout_details[WORKOUT_NAME] = workout_name
 
                 if bool(workout_interval) and bool(workout_name):
                     try:
@@ -72,8 +76,7 @@ class Zwift:
 
                         doc_str = doc.toprettyxml(indent="\t")
 
-                        date: dt.datetime = date.strftime("%d %b %Y")
-                        filename = f"{date} - {workout_name}.zwo" if include_date else f"{workout_name}.zwo"
+                        filename = f"{workout_name}.zwo"
                         out_path = os.path.join(self.output_path, filename)
                         try:
                             with open(out_path, "w") as f:
