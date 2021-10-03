@@ -1,10 +1,19 @@
-import requests
+import asyncio
+import datetime as dt
+import http
 import json
-import lxml.html
-from lxml import etree
-from io import StringIO, BytesIO
-
 import logging
+from http import HTTPStatus
+from io import StringIO
+
+import aiohttp
+import pandas as pd
+import requests
+from aiohttp import BasicAuth
+from lxml import etree
+
+from trainerroad.Utils.Warning import *
+
 logger = logging.getLogger(__name__)
 
 
@@ -12,17 +21,27 @@ class TrainerRoad:
     _ftp = 'Ftp'
     _weight = 'Weight'
     _units_metric = 'kmh'
+    _login_name = 'LoginName'
+    _date = "Date"
+    _activity_id = "Activity.Id"
+    _activity_workout_name = "Name"
+
     _units_imperial = 'mph'
     _input_data_names = (_ftp, _weight, 'Marketing')
     _select_data_names = ('TimeZoneId', 'IsMale', 'IsPrivate',
                           'Units', 'IsVirtualPowerEnabled', 'TimeZoneId')
     _numerical_verify = (_ftp, _weight)
     _string_verify = _select_data_names + ('Marketing',)
-    _login_url = 'https://www.trainerroad.com/login'
-    _logout_url = 'https://www.trainerroad.com/logout'
-    _rider_url = 'https://www.trainerroad.com/profile/rider-information'
+    _login_url = 'https://www.trainerroad.com/app/login'
+    _logout_url = 'https://www.trainerroad.com/app/logout'
+    _member_info = "https://www.trainerroad.com/app/api/member-info"
+    _rider_url = 'https://www.trainerroad.com/app/profile/rider-information'
     _download_tcx_url = 'http://www.trainerroad.com/cycling/rides/download'
     _workouts_url = 'https://api.trainerroad.com/api/careerworkouts'
+    _calendar_url = "https://www.trainerroad.com/app/api/calendar/activities/"
+    _workout_details = "https://www.trainerroad.com/app/api/workoutdetails/{}"
+
+    # TODO move endpoints into singleton class
     _rvt = '__RequestVerificationToken'
 
     def __init__(self, username, password):
@@ -42,10 +61,11 @@ class TrainerRoad:
 
         if (r.status_code != 200) and (r.status_code != 302):
             # There was an error
+            # todo move warning into singleton class
             raise RuntimeError("Error loging in to TrainerRoad (Code {})"
                                .format(r.status_code))
 
-        logger.info('Logged into TrainerRoad as "{}"'.format(self._username))
+        logger.info(WARNING_LOGGING_AS.format(self._username))
 
     def disconnect(self):
         r = self._session.get(self._logout_url, allow_redirects=False)
@@ -84,7 +104,7 @@ class TrainerRoad:
 
         r = self._session.get(url)
 
-        if r.status_code != 200:
+        if r.status_code != http.HTTPStatus.OK:
             raise RuntimeError("Error getting info from TrainerRoad (Code {})"
                                .format(r.status_code))
 
@@ -101,6 +121,13 @@ class TrainerRoad:
                                .format(r.status_code))
 
         return r
+
+    def _read_member_info(self):
+        response = self._session.get(self._member_info)
+        if response.status_code == HTTPStatus.OK:
+            return response.json()
+        else:
+            raise RuntimeError('Failed to get member info')
 
     def _read_profile(self):
         r = self._get(self._rider_url)
@@ -159,7 +186,7 @@ class TrainerRoad:
         return
 
     @property
-    def ftp(self):
+    def ftp(self) -> int:
         values, token = self._read_profile()
         return values[self._ftp]
 
@@ -167,10 +194,19 @@ class TrainerRoad:
     def ftp(self, value):
         self._write_profile({self._ftp: value})
 
+    # def loginName(self):
+
     @property
-    def weight(self):
+    def weight(self) -> int:
         values, token = self._read_profile()
         return values[self._weight]
+
+    @property
+    def login_name(self) -> str:
+        r = self._read_member_info()
+        if bool(r):
+            login_name: str = r.get(self._login_name)
+            return login_name.lower()
 
     @weight.setter
     def weight(self, value):
@@ -193,10 +229,9 @@ class TrainerRoad:
         data = json.loads(res.text)
         logger.debug(json.dumps(data, indent=4, sort_keys=True))
 
-        logger.info('Recieved info on {} workouts'.format(len(data)))
+        logger.info('Received info on {} workouts'.format(len(data)))
 
         return data
-
 
     def get_workout(self, guid):
         res = self._session.get(self._workout_url
@@ -210,3 +245,54 @@ class TrainerRoad:
         logger.debug(json.dumps(data, indent=4, sort_keys=True))
 
         return data
+
+    def get_training_plans(self, start_date, end_date) -> pd.DataFrame:
+        """
+
+        :param start_date: date must be formatted as month/day/year
+        :param end_date: date must be formatted as month/day/year
+        :return:
+        """
+        params = f'{self.login_name}?startDate={start_date}&endDate={end_date}'
+        endpoint = self._calendar_url + params
+        today = dt.datetime.now().strftime("%Y-%m-%d")
+
+        response = self._session.get(endpoint)
+        if response.status_code == HTTPStatus.OK:
+            calendar: dict = response.json()
+            calendar_df = pd.json_normalize(calendar)[[self._date, self._activity_workout_name, self._activity_id]]
+            calendar_df.dropna(inplace=True)
+            calendar_df[self._activity_id] = calendar_df[self._activity_id].astype(int)
+            calendar_df[self._date] = pd.to_datetime(calendar_df[self._date])
+            calendar_df = calendar_df.loc[calendar_df[self._date] >= today]
+            calendar_df.sort_values(self._date, ascending=True, inplace=True, ignore_index=True)
+            return calendar_df
+
+        else:
+            raise RuntimeError('Unable to get training plan: (Code = {})'
+                               .format(response.status_code))
+
+    async def _get_workout_detail(self, session, workout_id: str):
+        url = self._workout_details.format(workout_id)
+        async with session.get(url) as resp:
+            response = await resp.json()
+            return response
+
+    async def get_workouts_details(self, workouts) -> list:
+        tasks = []
+        async with aiohttp.ClientSession(auth=BasicAuth(login=self._username, password=self._password)) as session:
+            data = {'Username': self._username,
+                    'Password': self._password}
+            async with session.post(self._login_url, data=data) as response:
+                if response.status == HTTPStatus.OK:
+                    logger.info(WARNING_LOGGING_AS.format(self._username))
+
+                    for workout in workouts:
+                        tasks.append(asyncio.ensure_future(self._get_workout_detail(session, workout_id=workout)))
+
+                    output = await asyncio.gather(*tasks)
+                    return output
+
+                else:
+                    raise RuntimeError("Error logging in to TrainerRoad (Code {})"
+                                       .format(response.status))
