@@ -59,7 +59,9 @@ class Zwift:
         plan_dict = create_plan_dictionary(response)
 
         for date, workout_id in zip(calendar[DATE], calendar[ACTIVITY_ID]):
-            workout = plan_dict.get(workout_id)
+            workout_plan = plan_dict
+            workout = workout_plan.get(workout_id)
+
             if bool(workout):
                 workout_details = workout.get(DETAILS)
                 workout_interval = workout.get(INTERVAL)
