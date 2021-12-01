@@ -25,3 +25,5 @@ USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 11_3) AppleWebKit/605.1.15 
              "Version/14.1 Safari/605.1.15 "
 
 OUTPUT_FILE = f"training_plan_{today.strftime('%d_%m_%Y_%H_%M_%S')}.zip"
+TRAINERROAD_USER = 'TRAINERROAD_USER'
+TRAINERROAD_PASSWORD = 'TRAINERROAD_PASSWORD'
