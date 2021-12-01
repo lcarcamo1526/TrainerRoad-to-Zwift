@@ -44,6 +44,7 @@ class Zwift:
         self.workout_manager = Workout()
         self.output_path = output_folder
         self.temp_path = os.path.join(self.output_path, 'Zwift')
+        self.zipfile = None
         self.logger = logging.getLogger('')
 
         try:
@@ -108,12 +109,12 @@ class Zwift:
                         logging.error(workout_name)
 
             if compress:
-                filename = os.path.join(self.output_path, OUTPUT_FILE)
+                self.zipfile = os.path.join(self.output_path, OUTPUT_FILE)
                 try:
-                    gen_zip_from_path(dir_to_archive=self.temp_path, archive_filename=filename)
-                    logging.warning(f"Successfully compressed workout0, saved in: {filename}")
+                    gen_zip_from_path(dir_to_archive=self.temp_path, archive_filename=self.zipfile)
+                    logging.warning(f"Successfully compressed workout, saved in: {self.zipfile}")
                 except Exception as e:
-                    logging.error(f"Failed to save Zip File: {filename} + {e}")
+                    logging.error(f"Failed to save Zip File: {self.zipfile} + {e}")
 
             return True
 
