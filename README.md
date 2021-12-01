@@ -2,6 +2,13 @@
 
 > Simple notebook that export specifics workouts and plans to Zwift.
 
+## Run It
+
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/lcarcamo1526/TrainerRoad-to-Zwift/HEAD)
+
+
+_Click on the button above, and replace your credentials and your desire parameters, wait an download the zip file_
+
 ## Installation
 
 OS X & Linux:
