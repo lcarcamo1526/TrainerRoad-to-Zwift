@@ -4,10 +4,17 @@
 
 ## Run It
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/lcarcamo1526/TrainerRoad-to-Zwift/HEAD)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/lcarcamo1526/TrainerRoad-to-Zwift/HEAD?labpath=Trainerroad.ipynb)
 
 
 _Click on the button above, and replace your credentials and your desire parameters, wait an download the zip file_
+
+
+## How to Use it?
+
+![Peek 2021-11-30 23-47](https://user-images.githubusercontent.com/39929831/144173742-e75a8e15-0a50-484f-8f24-2ab6dd8ecb49.gif)
+
+
 
 ## Installation
 
@@ -45,6 +52,9 @@ INCLUDE_DATE = False  # If True Download the whole calendar including daily work
 
 Credits to [stuwilkins](https://github.com/stuwilkins)
 for [python-trainerroad](https://github.com/stuwilkins/python-trainerroad)
+
+
+
 
 [npm-image]: https://img.shields.io/npm/v/datadog-metrics.svg?style=flat-square
 
