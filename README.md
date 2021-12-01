@@ -4,7 +4,7 @@
 
 ## Run It
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/lcarcamo1526/TrainerRoad-to-Zwift/HEAD)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/lcarcamo1526/TrainerRoad-to-Zwift/HEAD?labpath=Trainerroad.ipynb)
 
 
 _Click on the button above, and replace your credentials and your desire parameters, wait an download the zip file_
