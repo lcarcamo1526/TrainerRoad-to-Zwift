@@ -12,6 +12,7 @@ import requests
 from aiohttp import BasicAuth
 from lxml import etree
 
+from trainerroad.Utils.Str import USER_AGENT
 from trainerroad.Utils.Warning import *
 
 logger = logging.getLogger(__name__)
@@ -48,6 +49,7 @@ class TrainerRoad:
         self._username = username
         self._password = password
         self._session = None
+        self.logger = logging.getLogger('')
 
     def connect(self):
         self._session = requests.Session()
@@ -58,6 +60,9 @@ class TrainerRoad:
 
         r = self._session.post(self._login_url, data=data,
                                allow_redirects=False)
+        headers = r.headers
+        headers["User-Agent"] = USER_AGENT
+        r.headers = headers
 
         if (r.status_code != 200) and (r.status_code != 302):
             # There was an error
@@ -65,12 +70,12 @@ class TrainerRoad:
             raise RuntimeError("Error loging in to TrainerRoad (Code {})"
                                .format(r.status_code))
 
-        logger.info(WARNING_LOGGING_AS.format(self._username))
+        logger.warning(WARNING_LOGGING_AS.format(self._username))
 
     def disconnect(self):
         r = self._session.get(self._logout_url, allow_redirects=False)
         if (r.status_code != 200) and (r.status_code != 302):
-            raise RuntimeError("Error loging out of TrainerRoad (Code {})"
+            raise RuntimeError("Error logging out of TrainerRoad (Code {})"
                                .format(r.status_code))
 
         self._session = None
@@ -285,7 +290,7 @@ class TrainerRoad:
                     'Password': self._password}
             async with session.post(self._login_url, data=data) as response:
                 if response.status == HTTPStatus.OK:
-                    logger.info(WARNING_LOGGING_AS.format(self._username))
+                    logger.warning(WARNING_LOGGING_AS.format(self._username))
 
                     for workout in workouts:
                         tasks.append(asyncio.ensure_future(self._get_workout_detail(session, workout_id=workout)))

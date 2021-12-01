@@ -44,59 +44,80 @@ class Zwift:
         self.trainer.connect()
         self.workout_manager = Workout()
         self.output_path = output_folder
+        self.temp_path = os.path.join(self.output_path, 'Zwift')
+        self.logger = logging.getLogger('')
 
         try:
-            os.makedirs(self.output_path)
+            os.makedirs(self.temp_path)
             logging.info(f"Folder {self.output_path} does not exist creating path")
         except FileExistsError:
             pass
 
-    async def export_training_plan(self, include_date: bool, start_date: str = "12-25-2020",
-                                   end_date: str = "09-25-2023", compress=True):
-        calendar = self.trainer.get_training_plans(start_date=start_date, end_date=end_date)
-        workouts = list(set(calendar[ACTIVITY_ID]))
-        response = await self.trainer.get_workouts_details(workouts=workouts)
-        plan_dict = create_plan_dictionary(response)
+    async def export_training_plan(self, include_date: bool, start_date: str = None,
+                                   end_date: str = "09-25-2023", compress=False, offset_years=3) -> bool:
+        try:
+            today = dt.datetime.today()
+            if bool(start_date) is False:
+                start_date = today.strftime("%m-%d-%Y")
 
-        for date, workout_id in zip(calendar[DATE], calendar[ACTIVITY_ID]):
-            workout_plan = plan_dict.copy()
-            workout = workout_plan.get(workout_id)
+            if bool(end_date) is False:
+                result = today + dt.timedelta(days=365 * offset_years)
+                end_date = result.strftime("%m-%d-%Y")
+            calendar = self.trainer.get_training_plans(start_date=start_date, end_date=end_date)
+            workouts = list(set(calendar[ACTIVITY_ID]))
+            logging.info(workouts)
+            response = await self.trainer.get_workouts_details(workouts=workouts)
+            plan_dict = create_plan_dictionary(response)
 
-            if bool(workout):
-                workout_details = workout.get(DETAILS)
-                workout_interval = workout.get(INTERVAL)
-                date: dt.datetime = date.strftime("%Y-%m-%d")
-                workout_name = workout_details.get(WORKOUT_NAME)
-                if include_date:
-                    new_workout_details = workout_details.copy()
-                    new_workout_name = f"{date} {workout_name}"
-                    new_workout_details[WORKOUT_NAME] = new_workout_name
-                    workout_details = new_workout_details
-                    workout_name = new_workout_name
+            for date, workout_id in zip(calendar[DATE], calendar[ACTIVITY_ID]):
+                workout_plan = plan_dict.copy()
+                workout = workout_plan.get(workout_id)
 
-                if bool(workout_interval):
-                    try:
-                        doc = self.workout_manager.convert_workout(interval=workout_interval,
-                                                                   workout_details=workout_details)
+                if bool(workout):
+                    workout_details = workout.get(DETAILS)
+                    workout_interval = workout.get(INTERVAL)
+                    logging.info(workout_interval)
 
-                        doc_str = doc.toprettyxml(indent="\t")
+                    date = date.strftime("%Y-%m-%d")
+                    workout_name = workout_details.get(WORKOUT_NAME)
+                    if include_date:
+                        new_workout_details = workout_details.copy()
+                        new_workout_name = f"{date} {workout_name}"
+                        new_workout_details[WORKOUT_NAME] = new_workout_name
+                        workout_details = new_workout_details
+                        workout_name = new_workout_name
 
-                        filename = f"{workout_name}.zwo"
-                        out_path = os.path.join(self.output_path, filename)
+                    if bool(workout_interval):
                         try:
-                            with open(out_path, "w") as f:
-                                f.write(doc_str)
-                        except Exception as e:
-                            logging.error(f"Error saving workout {filename}: {str(e)}")
-                            pass
-                    except RuntimeError:
-                        logging.error(workout_name)
-                else:
-                    logging.error(workout_name)
+                            doc = self.workout_manager.convert_workout(interval=workout_interval,
+                                                                       workout_details=workout_details)
 
-        if compress:
-            filename = os.path.join(self.output_path, "training_plan.zip")
-            try:
-                gen_zip_from_path(self.output_path, filename)
-            except Exception as e:
-                logging.error(f"Failed to save Zip File: {filename} + {e}")
+                            doc_str = doc.toprettyxml(indent="\t")
+
+                            filename = f"{workout_name}.zwo"
+                            out_path = os.path.join(self.temp_path, filename)
+                            try:
+                                with open(out_path, "w") as f:
+                                    f.write(doc_str)
+                            except Exception as e:
+                                logging.error(f"Error saving workout {filename}: {str(e)}")
+                                pass
+                        except RuntimeError as e:
+                            logging.error(e)
+                            logging.error(workout_name)
+                    else:
+                        logging.error(workout_name)
+
+            if compress:
+                filename = os.path.join(self.output_path, OUTPUT_FILE)
+                try:
+                    gen_zip_from_path(dir_to_archive=self.temp_path, archive_filename=filename)
+                    logging.warning(f"Successfully compressed workout0, saved in: {filename}")
+                except Exception as e:
+                    logging.error(f"Failed to save Zip File: {filename} + {e}")
+
+            return True
+
+        except Exception as e:
+            logging.error(e)
+            return False
