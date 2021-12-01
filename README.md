@@ -17,9 +17,13 @@ pip install -r requirements.txt
 Make sure to replace the following variables with your own values:
 
 ```sh
-os.environ['TRAINERROAD_USER'] = "your@username.com"
-os.environ['TRAINERROAD_PASSWORD'] = "yourpassword"
-output_path = "/tmp/workouts/"
+os.environ[TRAINERROAD_USER] = "your@username.com"
+os.environ[TRAINERROAD_PASSWORD] = "yourpassword"
+
+START_DATE = "12-12-2021"  # By default today's date
+END_DATE = "12-12-2024"  # By default today's date plus 3 years
+INCLUDE_DATE = False  # If True Download the whole calendar including daily workouts
+
 ```
 
 ## Contributing
