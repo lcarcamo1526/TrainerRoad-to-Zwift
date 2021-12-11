@@ -12,8 +12,19 @@ _Click on the button above, and replace your credentials and your desire paramet
 
 ## How to Use it?
 
+#### Download files from notebook
 ![Peek 2021-11-30 23-47](https://user-images.githubusercontent.com/39929831/144173742-e75a8e15-0a50-484f-8f24-2ab6dd8ecb49.gif)
 
+#### Unzip compress files and move into Zwift workout folder:
+
+
+![untitled](https://user-images.githubusercontent.com/39929831/145689308-9a22e43f-c541-4e20-a48f-18802ae9a1da.gif)
+
+
+
+#### Go to custom workouts and enjoy!:
+
+![untitled1](https://user-images.githubusercontent.com/39929831/145689348-48c9f60a-fa3e-48ba-8728-d422cc4fce82.gif)
 
 
 ## Installation
