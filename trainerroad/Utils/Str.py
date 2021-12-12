@@ -21,9 +21,13 @@ ACTIVITY_ID = "Activity.Id"
 DETAILS = 'Details'
 INTERVAL = 'intervalData'
 ID = 'Id'
-USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 11_3) AppleWebKit/605.1.15 (KHTML, like Gecko) " \
-             "Version/14.1 Safari/605.1.15 "
 
+USERNAME = 'Username'
+PASSWORD = 'Password'
 OUTPUT_FILE = f"training_plan_{today.strftime('%d_%m_%Y_%H_%M_%S')}.zip"
 TRAINERROAD_USER = 'TRAINERROAD_USER'
 TRAINERROAD_PASSWORD = 'TRAINERROAD_PASSWORD'
+SUCCESS_MARKDOWN_WARNING = "Status: <font color='green'>Success</font>"
+OUTPUT_PATH_MARKDOWN_WARNING = "Output path: <strong><em>{}</em></strong>."
+FAIL_MARKDOWN_WARNING = "Status: <font color='red'>Fail</font>"
+OUTPUT_FOLDER = 'output'

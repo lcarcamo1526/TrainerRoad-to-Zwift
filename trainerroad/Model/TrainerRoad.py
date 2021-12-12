@@ -10,9 +10,10 @@ import aiohttp
 import pandas as pd
 import requests
 from aiohttp import BasicAuth
+from latest_user_agents import get_random_user_agent
 from lxml import etree
 
-from trainerroad.Utils.Str import USER_AGENT
+from trainerroad.Utils.Str import USERNAME, PASSWORD
 from trainerroad.Utils.Warning import *
 
 logger = logging.getLogger(__name__)
@@ -55,19 +56,21 @@ class TrainerRoad:
         self._session = requests.Session()
         self._session.auth = (self._username, self._password)
 
-        data = {'Username': self._username,
-                'Password': self._password}
+        data = {USERNAME: self._username,
+                PASSWORD: self._password}
 
         r = self._session.post(self._login_url, data=data,
                                allow_redirects=False)
         headers = r.headers
-        headers["User-Agent"] = USER_AGENT
+        user_agent = get_random_user_agent()
+        logging.warning(f"Current User Agent: {user_agent}")
+        headers["User-Agent"] = user_agent
         r.headers = headers
 
         if (r.status_code != 200) and (r.status_code != 302):
             # There was an error
             # todo move warning into singleton class
-            raise RuntimeError("Error loging in to TrainerRoad (Code {})"
+            raise RuntimeError("Error logging in to TrainerRoad (Code {})"
                                .format(r.status_code))
 
         logger.warning(WARNING_LOGGING_AS.format(self._username))
@@ -149,7 +152,7 @@ class TrainerRoad:
         for key in self._select_data_names:
             select_data[key] = self._parse_name(tree, key)
 
-        return (dict(**input_data, **select_data), token)
+        return dict(**input_data, **select_data), token
 
     def _write_profile(self, new_values):
         # Read values
@@ -283,11 +286,11 @@ class TrainerRoad:
             response = await resp.json()
             return response
 
-    async def get_workouts_details(self, workouts) -> list:
+    async def get_workouts_details(self, workouts) -> tuple:
         tasks = []
         async with aiohttp.ClientSession(auth=BasicAuth(login=self._username, password=self._password)) as session:
-            data = {'Username': self._username,
-                    'Password': self._password}
+            data = {USERNAME: self._username,
+                    PASSWORD: self._password}
             async with session.post(self._login_url, data=data) as response:
                 if response.status == HTTPStatus.OK:
                     logger.warning(WARNING_LOGGING_AS.format(self._username))
