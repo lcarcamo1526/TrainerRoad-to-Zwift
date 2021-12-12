@@ -12,6 +12,26 @@ _Click on the button above, and replace your credentials and your desire paramet
 
 ## How to Use it?
 
+
+### Usage example
+
+Make sure to replace the following variables with your own values:
+
+```sh
+os.environ[TRAINERROAD_USER] = "your@username.com"
+os.environ[TRAINERROAD_PASSWORD] = "yourpassword"
+
+START_DATE = "12-20-2021"  # By default today's date
+END_DATE = "12-20-2024"   By default, today's date within 3 years
+INCLUDE_DATE = False  # If True Download the whole calendar including daily workouts
+
+```
+
+#### Restart the kernel and run all
+
+![Peek 2021-12-11 21-54](https://user-images.githubusercontent.com/39929831/145698482-f59e8a9f-3a3f-4ee8-afdb-555d73e12d62.gif)
+
+
 #### Download files from notebook
 ![Peek 2021-11-30 23-47](https://user-images.githubusercontent.com/39929831/144173742-e75a8e15-0a50-484f-8f24-2ab6dd8ecb49.gif)
 
@@ -35,20 +55,6 @@ _create your own environment with conda or virtualenv and then:_
 
 ```sh
 pip install -r requirements.txt
-```
-
-## Usage example
-
-Make sure to replace the following variables with your own values:
-
-```sh
-os.environ[TRAINERROAD_USER] = "your@username.com"
-os.environ[TRAINERROAD_PASSWORD] = "yourpassword"
-
-START_DATE = "12-12-2021"  # By default today's date
-END_DATE = "12-12-2024"   By default, today's date within 3 years
-INCLUDE_DATE = False  # If True Download the whole calendar including daily workouts
-
 ```
 
 ## Contributing
