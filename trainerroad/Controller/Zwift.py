@@ -1,5 +1,6 @@
 import logging
 import os
+import traceback
 import zipfile
 from collections.abc import Iterable
 
@@ -38,7 +39,7 @@ def create_plan_dictionary(response: Iterable) -> dict:
 
 
 class Zwift:
-    def __init__(self, username: str, password: str, output_folder: str):
+    def __init__(self, username: str, password: str, output_folder: str = OUTPUT_FOLDER):
         self.trainer = TrainerRoad(username=username, password=password)
         self.trainer.connect()
         self.workout_manager = Workout()
@@ -54,7 +55,7 @@ class Zwift:
             pass
 
     async def export_training_plan(self, include_date: bool, start_date: str = None,
-                                   end_date: str = "09-25-2023", compress=False, offset_years=3) -> bool:
+                                   end_date: str = None, compress=False, offset_years=3) -> bool:
         try:
             today = dt.datetime.today()
             if bool(start_date) is False:
@@ -100,7 +101,7 @@ class Zwift:
                                 with open(out_path, "w") as f:
                                     f.write(doc_str)
                             except Exception as e:
-                                logging.error(f"Error saving workout {filename}: {str(e)}")
+                                logging.error(f"Error saving workout {filename}: {str(e)} {traceback.format_exc()} ")
                                 pass
                         except RuntimeError as e:
                             logging.error(e)
