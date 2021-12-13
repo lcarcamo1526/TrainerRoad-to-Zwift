@@ -1,6 +1,6 @@
 # Trainerroad to Zwift
 
-> Simple notebook that export specifics workouts and plans to Zwift.
+> Simple tool that let you download your trainerroad calendar including workouts to be used on Zwift
 
 ## Run It
 
@@ -21,8 +21,8 @@ Make sure to replace the following variables with your own values:
 os.environ[TRAINERROAD_USER] = "your@username.com"
 os.environ[TRAINERROAD_PASSWORD] = "yourpassword"
 
-START_DATE = "12-20-2021"  # By default today's date
-END_DATE = "12-20-2024"   # By default, today's date within 3 years
+START_DATE = "MM-DD-YYYY" # For example: 12-20-2021, By default today's date
+END_DATE = "MM-DD-YYYY"   # For example: 12-20-2021, By default, today's date within 3 years
 INCLUDE_DATE = False  # If True Download the whole calendar including daily workouts
 
 ```
