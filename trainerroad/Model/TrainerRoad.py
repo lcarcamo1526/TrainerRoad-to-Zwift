@@ -48,11 +48,12 @@ class TrainerRoad:
     _rvt = '__RequestVerificationToken'
 
     def __init__(self, username, password):
-        self._display_name = ''
         self._username = username
         self._password = password
         self._session = None
         self.logger = logging.getLogger('')
+        self.connect()
+        self._display_name = self.login_name
 
     def connect(self):
         self._session = requests.Session()
@@ -223,8 +224,8 @@ class TrainerRoad:
         if bool(r):
             login_name: str = r.get(self._login_name)
             if bool(login_name):
-                self._display_name = login_name.lower()
-            return login_name.lower()
+                return login_name.lower()
+        return ''
 
     @weight.setter
     def weight(self, value):
