@@ -288,6 +288,7 @@ class TrainerRoad:
 
         else:
             self.logger.warning(params)
+            self.logger.warning(response.text)
             raise RuntimeError('Unable to get training plan: (Code = {})'
                                .format(response.status_code))
 
