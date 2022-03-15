@@ -4,6 +4,8 @@ from collections.abc import Mapping
 from xml.dom import minidom
 from xml.dom.minidom import Element
 
+import pandas as pd
+
 from trainerroad.Utils.Str import *
 
 
@@ -22,18 +24,19 @@ class Workout:
         """
         workouts_ = workouts[1:]
 
-        for index, (current_interval, next_interval) in enumerate(zip(workouts_, workouts_[1:])):
+        workouts_shifted = pd.Series(workouts_).shift(1).fillna(-1).tolist()
+        for index, (current_interval, next_interval) in enumerate(zip(workouts_, workouts_shifted)):
             cooldown = index == len(workouts_[1:]) - 1
             warmup = index == 0
             self.build_workout(document=document, section=section, interval=current_interval,
-                               next_interval=next_interval, warmup=warmup,
+                               previous_interval=next_interval, warmup=warmup,
                                cooldown=cooldown)
             parent_section.appendChild(section)
 
-    def build_workout(self, document, section, interval: dict, next_interval: dict, cooldown=False, warmup=False):
+    def build_workout(self, document, section, interval: dict, previous_interval: dict, cooldown=False, warmup=False):
         """
 
-        :param next_interval:
+        :param previous_interval:
         :param document:
         :param section:
         :param interval:
@@ -43,10 +46,15 @@ class Workout:
         """
         end = int(interval.get("End"))
         start = int(interval.get("Start"))
-        is_next_fake = bool(next_interval.get("IsFake"))
-        next_power = str(float(next_interval.get("StartTargetPowerPercent")) / 100)
         power = str(float(interval.get("StartTargetPowerPercent")) / 100)
         duration = str(end - start)
+        is_current_fake = bool(interval.get("IsFake"))
+        # is_previous_fake = None
+        previous_power = None
+
+        if previous_interval != -1:
+            # is_previous_fake = bool(previous_interval.get("IsFake"))
+            previous_power = str(float(previous_interval.get("StartTargetPowerPercent")) / 100)
 
         if cooldown is False and warmup is False:
             steady_interval = document.createElement(STEADY_STATE)
@@ -56,13 +64,17 @@ class Workout:
 
         elif cooldown and warmup is False:
             cooldown_interval = document.createElement(RAMP)
-            # if is_next_fake:
-            #     cooldown_interval.setAttribute(POWER_HIGH, next_power)
-            # else:
-            #     cooldown_interval.setAttribute(POWER_HIGH, power)
-            cooldown_interval.setAttribute(POWER_HIGH, power)
-            cooldown_interval.setAttribute(DURATION, duration)
+            # print(f"is_current_fake: {is_current_fake}")
+            if is_current_fake:
+                # print("triggered")
+                cooldown_interval.setAttribute(POWER_HIGH, previous_power)
+
+            else:
+                cooldown_interval.setAttribute(POWER_HIGH, power)
+
             cooldown_interval.setAttribute(POWER_LOW, power)
+            cooldown_interval.setAttribute(DURATION, duration)
+
             new_interval = cooldown_interval
 
         elif cooldown is False and warmup:
@@ -80,6 +92,9 @@ class Workout:
             new_interval = steady_interval
 
         section.appendChild(new_interval)
+
+        # print(is_current_fake, cooldown, warmup)
+        # print(f"Prev power: {previous_power}, Current power:{power} duration: {duration}")
 
         return section
 
