@@ -56,10 +56,11 @@ class Workout:
 
         elif cooldown and warmup is False:
             cooldown_interval = document.createElement(RAMP)
-            if is_next_fake:
-                cooldown_interval.setAttribute(POWER_HIGH, next_power)
-            else:
-                cooldown_interval.setAttribute(POWER_HIGH, power)
+            # if is_next_fake:
+            #     cooldown_interval.setAttribute(POWER_HIGH, next_power)
+            # else:
+            #     cooldown_interval.setAttribute(POWER_HIGH, power)
+            cooldown_interval.setAttribute(POWER_HIGH, power)
             cooldown_interval.setAttribute(DURATION, duration)
             cooldown_interval.setAttribute(POWER_LOW, power)
             new_interval = cooldown_interval
