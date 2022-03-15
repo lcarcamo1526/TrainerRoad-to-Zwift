@@ -10,8 +10,9 @@ import aiohttp
 import pandas as pd
 import requests
 from aiohttp import BasicAuth
-from latest_user_agents import get_random_user_agent
 from lxml import etree
+from random_user_agent.params import SoftwareName, OperatingSystem
+from random_user_agent.user_agent import UserAgent
 
 from trainerroad.Utils.Str import USERNAME, PASSWORD
 from trainerroad.Utils.Warning import *
@@ -47,6 +48,7 @@ class TrainerRoad:
     _rvt = '__RequestVerificationToken'
 
     def __init__(self, username, password):
+        self._display_name = ''
         self._username = username
         self._password = password
         self._session = None
@@ -62,12 +64,15 @@ class TrainerRoad:
         r = self._session.post(self._login_url, data=data,
                                allow_redirects=False)
         headers = r.headers
-        user_agent = get_random_user_agent()
-        logging.warning(f"Current User Agent: {user_agent}")
+        software_names = [SoftwareName.CHROME.value, SoftwareName.FIREFOX.value]
+        operating_systems = [OperatingSystem.MAC_OS_X, OperatingSystem.WINDOWS.value]
+        user_agent_rotator = UserAgent(software_names=software_names, operating_systems=operating_systems, limit=100)
+        user_agent = user_agent_rotator.get_random_user_agent()
+        self.logger.warning(f"Current User Agent: {user_agent}")
         headers["User-Agent"] = user_agent
         r.headers = headers
 
-        if (r.status_code != 200) and (r.status_code != 302):
+        if (r.status_code != http.HTTPStatus.OK) and (r.status_code != http.HTTPStatus.FOUND):
             # There was an error
             # todo move warning into singleton class
             raise RuntimeError("Error logging in to TrainerRoad (Code {})"
@@ -77,7 +82,7 @@ class TrainerRoad:
 
     def disconnect(self):
         r = self._session.get(self._logout_url, allow_redirects=False)
-        if (r.status_code != 200) and (r.status_code != 302):
+        if (r.status_code != http.HTTPStatus.OK) and (r.status_code != http.HTTPStatus.FOUND):
             raise RuntimeError("Error logging out of TrainerRoad (Code {})"
                                .format(r.status_code))
 
@@ -131,10 +136,13 @@ class TrainerRoad:
         return r
 
     def _read_member_info(self):
-        response = self._session.get(self._member_info)
+        response: requests.Response = self._session.get(self._member_info)
         if response.status_code == HTTPStatus.OK:
             return response.json()
         else:
+            self.logger.warning('Failed to get member info')
+            self.logger.warning(f"ERROR: {response.text} status_code: {response.status_code}")
+            self.logger.warning(f"ERROR: {response.json()}")
             raise RuntimeError('Failed to get member info')
 
     def _read_profile(self):
@@ -214,6 +222,8 @@ class TrainerRoad:
         r = self._read_member_info()
         if bool(r):
             login_name: str = r.get(self._login_name)
+            if bool(login_name):
+                self._display_name = login_name.lower()
             return login_name.lower()
 
     @weight.setter
@@ -261,7 +271,7 @@ class TrainerRoad:
         :param end_date: date must be formatted as month/day/year
         :return:
         """
-        params = f'{self.login_name}?startDate={start_date}&endDate={end_date}'
+        params = f'{self._display_name}?startDate={start_date}&endDate={end_date}'
         endpoint = self._calendar_url + params
         today = dt.datetime.now().strftime("%Y-%m-%d")
 

@@ -54,6 +54,7 @@ class Workout:
             cooldown_interval = document.createElement(COOLDOWN)
             cooldown_interval.setAttribute(DURATION, duration)
             cooldown_interval.setAttribute(POWER_HIGH, power)
+            # todo set values from previous interval (if exists)
             cooldown_interval.setAttribute(POWER_LOW, power)
             new_interval = cooldown_interval
 
