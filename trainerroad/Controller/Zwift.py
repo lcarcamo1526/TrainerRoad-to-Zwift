@@ -41,7 +41,7 @@ def create_plan_dictionary(response: Iterable) -> dict:
 class Zwift:
     def __init__(self, username: str, password: str, output_folder: str = OUTPUT_FOLDER):
         self.trainer = TrainerRoad(username=username, password=password)
-        self.trainer.connect()
+        # self.trainer.connect()
         self.workout_manager = Workout()
         self.output_path = output_folder
         self.temp_path = os.path.join(self.output_path, 'Zwift')
@@ -101,11 +101,13 @@ class Zwift:
                                 with open(out_path, "w") as f:
                                     f.write(doc_str)
                             except Exception as e:
-                                logging.error(f"Error saving workout {filename}: {str(e)} {traceback.format_exc()} ")
+                                self.logger.error(
+                                    f"Error saving workout {filename}: {str(e)} {traceback.format_exc()} ")
                                 pass
                         except RuntimeError as e:
-                            logging.error(e)
-                            logging.error(workout_name)
+                            self.logger.error(e)
+                            self.logger.error(workout_name)
+                            self.logger.error(traceback.format_exc())
                     else:
                         logging.error(workout_name)
 
@@ -120,5 +122,6 @@ class Zwift:
             return True
 
         except Exception as e:
-            logging.error(e)
+            self.logger.warning(traceback.format_exc())
+            self.logger.error(e)
             return False

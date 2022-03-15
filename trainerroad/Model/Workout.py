@@ -21,16 +21,19 @@ class Workout:
         :return:
         """
         workouts_ = workouts[1:]
-        for index, interval in enumerate(workouts_):
-            cooldown = index == len(workouts_) - 1
+
+        for index, (current_interval, next_interval) in enumerate(zip(workouts_, workouts_[1:])):
+            cooldown = index == len(workouts_[1:]) - 1
             warmup = index == 0
-            self.build_workout(document=document, section=section, interval=interval, warmup=warmup,
+            self.build_workout(document=document, section=section, interval=current_interval,
+                               next_interval=next_interval, warmup=warmup,
                                cooldown=cooldown)
             parent_section.appendChild(section)
 
-    def build_workout(self, document, section, interval: dict, cooldown=False, warmup=False):
+    def build_workout(self, document, section, interval: dict, next_interval: dict, cooldown=False, warmup=False):
         """
 
+        :param next_interval:
         :param document:
         :param section:
         :param interval:
@@ -40,9 +43,10 @@ class Workout:
         """
         end = int(interval.get("End"))
         start = int(interval.get("Start"))
+        is_next_fake = bool(next_interval.get("IsFake"))
+        next_power = str(float(next_interval.get("StartTargetPowerPercent")) / 100)
         power = str(float(interval.get("StartTargetPowerPercent")) / 100)
         duration = str(end - start)
-        new_interval = None
 
         if cooldown is False and warmup is False:
             steady_interval = document.createElement(STEADY_STATE)
@@ -51,9 +55,12 @@ class Workout:
             new_interval = steady_interval
 
         elif cooldown and warmup is False:
-            cooldown_interval = document.createElement(COOLDOWN)
+            cooldown_interval = document.createElement(RAMP)
+            if is_next_fake:
+                cooldown_interval.setAttribute(POWER_HIGH, next_power)
+            else:
+                cooldown_interval.setAttribute(POWER_HIGH, power)
             cooldown_interval.setAttribute(DURATION, duration)
-            cooldown_interval.setAttribute(POWER_HIGH, power)
             cooldown_interval.setAttribute(POWER_LOW, power)
             new_interval = cooldown_interval
 

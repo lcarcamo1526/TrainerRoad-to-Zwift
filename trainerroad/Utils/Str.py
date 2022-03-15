@@ -17,6 +17,7 @@ AUTHOR = 'author'
 DATE = 'Date'
 WARMUP = "Warmup"
 COOLDOWN = "Cooldown"
+RAMP = "Ramp"
 ACTIVITY_ID = "Activity.Id"
 DETAILS = 'Details'
 INTERVAL = 'intervalData'
