@@ -1,4 +1,3 @@
-import logging
 from collections.abc import Iterable
 from collections.abc import Mapping
 from xml.dom import minidom
@@ -25,11 +24,11 @@ class Workout:
         workouts_ = workouts[1:]
 
         workouts_shifted = pd.Series(workouts_).shift(1).fillna(-1).tolist()
-        for index, (current_interval, next_interval) in enumerate(zip(workouts_, workouts_shifted)):
-            cooldown = index == len(workouts_[1:]) - 1
+        for index, (current_interval, previous_interval) in enumerate(zip(workouts_, workouts_shifted)):
+            cooldown = index == len(workouts_) - 1
             warmup = index == 0
             self.build_workout(document=document, section=section, interval=current_interval,
-                               previous_interval=next_interval, warmup=warmup,
+                               previous_interval=previous_interval, warmup=warmup,
                                cooldown=cooldown)
             parent_section.appendChild(section)
 
@@ -61,20 +60,19 @@ class Workout:
             steady_interval.setAttribute(DURATION, duration)
             steady_interval.setAttribute(POWER, power)
             new_interval = steady_interval
+            print(f"Power: {power}, Start: {start}, End: {end}, Duration {duration}")
 
         elif cooldown and warmup is False:
             cooldown_interval = document.createElement(RAMP)
+            # cooldown_interval.setAttribute(POWER_HIGH, power)
             # print(f"is_current_fake: {is_current_fake}")
             if is_current_fake:
-                # print("triggered")
                 cooldown_interval.setAttribute(POWER_HIGH, previous_power)
-
-            else:
-                cooldown_interval.setAttribute(POWER_HIGH, power)
 
             cooldown_interval.setAttribute(POWER_LOW, power)
             cooldown_interval.setAttribute(DURATION, duration)
-
+            print(
+                f"Cooldown: Previous Power {previous_power}, Power: {power}, Start: {start}, End: {end}, Duration {duration}")
             new_interval = cooldown_interval
 
         elif cooldown is False and warmup:
@@ -83,18 +81,16 @@ class Workout:
             warmup_interval.setAttribute(POWER_HIGH, power)
             warmup_interval.setAttribute(POWER_LOW, power)
             new_interval = warmup_interval
+            print(f"Warmup Power: {power}, Start: {start}, End: {end}, Duration {duration}")
+
         else:
-            logging.info(
-                f" Warmup: {warmup} Cooldown: {cooldown} Power: {power}, Start: {start}, End: {end}, Duration {duration}")
             steady_interval = document.createElement(STEADY_STATE)
             steady_interval.setAttribute(DURATION, duration)
             steady_interval.setAttribute(POWER, power)
             new_interval = steady_interval
-
+            print(f"Power: {power}, Start: {start}, End: {end}, Duration {duration}")
         section.appendChild(new_interval)
 
-        # print(is_current_fake, cooldown, warmup)
-        # print(f"Prev power: {previous_power}, Current power:{power} duration: {duration}")
 
         return section
 
