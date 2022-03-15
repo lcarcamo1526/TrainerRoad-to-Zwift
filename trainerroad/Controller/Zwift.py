@@ -101,11 +101,13 @@ class Zwift:
                                 with open(out_path, "w") as f:
                                     f.write(doc_str)
                             except Exception as e:
-                                logging.error(f"Error saving workout {filename}: {str(e)} {traceback.format_exc()} ")
+                                self.logger.error(
+                                    f"Error saving workout {filename}: {str(e)} {traceback.format_exc()} ")
                                 pass
                         except RuntimeError as e:
-                            logging.error(e)
-                            logging.error(workout_name)
+                            self.logger.error(e)
+                            self.logger.error(workout_name)
+                            self.logger.error(traceback.format_exc())
                     else:
                         logging.error(workout_name)
 
@@ -120,5 +122,6 @@ class Zwift:
             return True
 
         except Exception as e:
-            logging.error(e)
+            self.logger.warning(traceback.format_exc())
+            self.logger.error(e)
             return False

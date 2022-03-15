@@ -4,8 +4,6 @@ from collections.abc import Mapping
 from xml.dom import minidom
 from xml.dom.minidom import Element
 
-import pandas as pd
-
 from trainerroad.Utils.Str import *
 
 
@@ -25,7 +23,7 @@ class Workout:
         workouts_ = workouts[1:]
 
         for index, (current_interval, next_interval) in enumerate(zip(workouts_, workouts_[1:])):
-            cooldown = index == len(workouts_) - 1
+            cooldown = index == len(workouts_[1:]) - 1
             warmup = index == 0
             self.build_workout(document=document, section=section, interval=current_interval,
                                next_interval=next_interval, warmup=warmup,
@@ -62,7 +60,6 @@ class Workout:
                 cooldown_interval.setAttribute(POWER_HIGH, next_power)
             else:
                 cooldown_interval.setAttribute(POWER_HIGH, power)
-
             cooldown_interval.setAttribute(DURATION, duration)
             cooldown_interval.setAttribute(POWER_LOW, power)
             new_interval = cooldown_interval
