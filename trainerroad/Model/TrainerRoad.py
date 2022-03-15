@@ -287,6 +287,7 @@ class TrainerRoad:
             return calendar_df
 
         else:
+            self.logger.warning(params)
             raise RuntimeError('Unable to get training plan: (Code = {})'
                                .format(response.status_code))
 
