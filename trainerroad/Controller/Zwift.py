@@ -41,7 +41,7 @@ def create_plan_dictionary(response: Iterable) -> dict:
 class Zwift:
     def __init__(self, username: str, password: str, output_folder: str = OUTPUT_FOLDER):
         self.trainer = TrainerRoad(username=username, password=password)
-        self.trainer.connect()
+        # self.trainer.connect()
         self.workout_manager = Workout()
         self.output_path = output_folder
         self.temp_path = os.path.join(self.output_path, 'Zwift')
