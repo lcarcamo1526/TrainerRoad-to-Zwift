@@ -7,6 +7,7 @@ from collections.abc import Iterable
 from ..Model.TrainerRoad import TrainerRoad
 from ..Model.Workout import Workout
 from ..Utils.Str import *
+from ..Utils.Warning import WARNING_DOWNLOADING_WORKOUTS
 
 
 def gen_zip_from_path(dir_to_archive, archive_filename):
@@ -63,7 +64,8 @@ class Zwift:
             calendar = self.trainer.get_training_plans(start_date=start_date, end_date=end_date,
                                                        username=optional_username)
             workouts = list(set(calendar[ACTIVITY_ID]))
-            self.logger.info(workouts)
+            if bool(workouts):
+                self.logger.warning(WARNING_DOWNLOADING_WORKOUTS.format(len(workouts)))
             response = await self.trainer.get_workouts_details(workouts=workouts)
             plan_dict = create_plan_dictionary(response)
 

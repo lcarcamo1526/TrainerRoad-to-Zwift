@@ -278,6 +278,7 @@ class TrainerRoad:
         if bool(username) is False:
             username = self._display_name
         params = f'{username}?startDate={start_date}&endDate={end_date}'
+        self.logger.warning(f"{username}: training plan")
         endpoint = self._calendar_url + params
         today = dt.datetime.now().strftime("%Y-%m-%d")
 
