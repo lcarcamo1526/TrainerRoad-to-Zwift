@@ -63,7 +63,7 @@ class Workout:
             # print(f"Power: {power}, Start: {start}, End: {end}, Duration {duration}")
 
         elif cooldown and warmup is False:
-            cooldown_interval = document.createElement(RAMP)
+            cooldown_interval = document.createElement(RAMP) if is_current_fake else document.createElement(STEADY_STATE)
             # cooldown_interval.setAttribute(POWER_HIGH, power)
             # print(f"is_current_fake: {is_current_fake}")
             if is_current_fake:
