@@ -3,6 +3,7 @@ import datetime as dt
 import http
 import json
 import logging
+import traceback
 from http import HTTPStatus
 from io import StringIO
 
@@ -265,33 +266,44 @@ class TrainerRoad:
 
         return data
 
-    def get_training_plans(self, start_date, end_date) -> pd.DataFrame:
+    def get_training_plans(self, start_date, end_date, username: str = None) -> pd.DataFrame:
         """
 
+        :param username:
         :param start_date: date must be formatted as month/day/year
         :param end_date: date must be formatted as month/day/year
         :return:
         """
-        params = f'{self._display_name}?startDate={start_date}&endDate={end_date}'
+
+        if bool(username) is False:
+            username = self._display_name
+        params = f'{username}?startDate={start_date}&endDate={end_date}'
+        self.logger.warning(f"{username}: training plan")
         endpoint = self._calendar_url + params
         today = dt.datetime.now().strftime("%Y-%m-%d")
 
         response = self._session.get(endpoint)
-        if response.status_code == HTTPStatus.OK:
-            calendar: dict = response.json()
-            calendar_df = pd.json_normalize(calendar)[[self._date, self._activity_workout_name, self._activity_id]]
-            calendar_df.dropna(inplace=True)
-            calendar_df[self._activity_id] = calendar_df[self._activity_id].astype(int)
-            calendar_df[self._date] = pd.to_datetime(calendar_df[self._date])
-            calendar_df = calendar_df.loc[calendar_df[self._date] >= today]
-            calendar_df.sort_values(self._date, ascending=True, inplace=True, ignore_index=True)
-            return calendar_df
+        try:
+            if response.status_code == HTTPStatus.OK:
+                calendar: dict = response.json()
+                calendar_df = pd.json_normalize(calendar)[[self._date, self._activity_workout_name, self._activity_id]]
+                calendar_df.dropna(inplace=True)
+                calendar_df[self._activity_id] = calendar_df[self._activity_id].astype(int)
+                calendar_df[self._date] = pd.to_datetime(calendar_df[self._date])
+                calendar_df = calendar_df.loc[calendar_df[self._date] >= today]
+                calendar_df.sort_values(self._date, ascending=True, inplace=True, ignore_index=True)
+                return calendar_df
 
-        else:
-            self.logger.warning(params)
-            self.logger.warning(response.text)
-            raise RuntimeError('Unable to get training plan: (Code = {})'
-                               .format(response.status_code))
+            else:
+                self.logger.warning(params)
+                self.logger.warning(response.text)
+                raise RuntimeError('Unable to get training plan: (Code = {})'
+                                   .format(response.status_code))
+        except Exception as e:
+            self.logger.warning(endpoint)
+            self.logger.warning(f"Status code: {response.status_code}, body: {response.text}")
+            self.logger.warning(e)
+            self.logger.warning(traceback.format_exc())
 
     async def _get_workout_detail(self, session, workout_id: str):
         url = self._workout_details.format(workout_id)

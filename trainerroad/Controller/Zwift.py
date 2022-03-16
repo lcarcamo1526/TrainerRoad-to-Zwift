@@ -7,6 +7,7 @@ from collections.abc import Iterable
 from ..Model.TrainerRoad import TrainerRoad
 from ..Model.Workout import Workout
 from ..Utils.Str import *
+from ..Utils.Warning import WARNING_DOWNLOADING_WORKOUTS
 
 
 def gen_zip_from_path(dir_to_archive, archive_filename):
@@ -44,18 +45,14 @@ class Zwift:
         # self.trainer.connect()
         self.workout_manager = Workout()
         self.output_path = output_folder
-        self.temp_path = os.path.join(self.output_path, 'Zwift')
+        self.temp_path = os.path.join(self.output_path, "Zwift")
         self.zipfile = None
         self.logger = logging.getLogger('')
 
-        try:
-            os.makedirs(self.temp_path)
-            logging.info(f"Folder {self.output_path} does not exist creating path")
-        except FileExistsError:
-            pass
+        os.makedirs(self.temp_path, exist_ok=True)
 
     async def export_training_plan(self, include_date: bool, start_date: str = None,
-                                   end_date: str = None, compress=False, offset_years=3) -> bool:
+                                   end_date: str = None, compress=False, offset_years=3, optional_username="") -> bool:
         try:
             today = dt.datetime.today()
             if bool(start_date) is False:
@@ -64,9 +61,11 @@ class Zwift:
             if bool(end_date) is False:
                 result = today + dt.timedelta(days=365 * offset_years)
                 end_date = result.strftime("%m-%d-%Y")
-            calendar = self.trainer.get_training_plans(start_date=start_date, end_date=end_date)
+            calendar = self.trainer.get_training_plans(start_date=start_date, end_date=end_date,
+                                                       username=optional_username)
             workouts = list(set(calendar[ACTIVITY_ID]))
-            logging.info(workouts)
+            if bool(workouts):
+                self.logger.warning(WARNING_DOWNLOADING_WORKOUTS.format(len(workouts)))
             response = await self.trainer.get_workouts_details(workouts=workouts)
             plan_dict = create_plan_dictionary(response)
 
