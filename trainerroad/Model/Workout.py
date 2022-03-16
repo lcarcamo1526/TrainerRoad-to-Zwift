@@ -69,7 +69,7 @@ class Workout:
             if is_current_fake:
                 cooldown_interval.setAttribute(POWER_LOW, power)
 
-            cooldown_interval.setAttribute(POWER_HIGH, str(float(power) - 0.1))
+            cooldown_interval.setAttribute(POWER_HIGH, str(round(float(power) - 0.1, 3)))
             cooldown_interval.setAttribute(DURATION, duration)
             # print(
             #     f"Cooldown: Previous Power {previous_power}, Power: {power}, Start: {start}, End: {end}, Duration {duration}")
