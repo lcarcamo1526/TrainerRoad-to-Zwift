@@ -60,19 +60,19 @@ class Workout:
             steady_interval.setAttribute(DURATION, duration)
             steady_interval.setAttribute(POWER, power)
             new_interval = steady_interval
-            print(f"Power: {power}, Start: {start}, End: {end}, Duration {duration}")
+            # print(f"Power: {power}, Start: {start}, End: {end}, Duration {duration}")
 
         elif cooldown and warmup is False:
             cooldown_interval = document.createElement(RAMP)
             # cooldown_interval.setAttribute(POWER_HIGH, power)
             # print(f"is_current_fake: {is_current_fake}")
             if is_current_fake:
-                cooldown_interval.setAttribute(POWER_HIGH, previous_power)
+                cooldown_interval.setAttribute(POWER_LOW, previous_power)
 
-            cooldown_interval.setAttribute(POWER_LOW, power)
+            cooldown_interval.setAttribute(POWER_HIGH, power)
             cooldown_interval.setAttribute(DURATION, duration)
-            print(
-                f"Cooldown: Previous Power {previous_power}, Power: {power}, Start: {start}, End: {end}, Duration {duration}")
+            # print(
+            #     f"Cooldown: Previous Power {previous_power}, Power: {power}, Start: {start}, End: {end}, Duration {duration}")
             new_interval = cooldown_interval
 
         elif cooldown is False and warmup:
@@ -81,14 +81,14 @@ class Workout:
             warmup_interval.setAttribute(POWER_HIGH, power)
             warmup_interval.setAttribute(POWER_LOW, power)
             new_interval = warmup_interval
-            print(f"Warmup Power: {power}, Start: {start}, End: {end}, Duration {duration}")
+            # print(f"Warmup Power: {power}, Start: {start}, End: {end}, Duration {duration}")
 
         else:
             steady_interval = document.createElement(STEADY_STATE)
             steady_interval.setAttribute(DURATION, duration)
             steady_interval.setAttribute(POWER, power)
             new_interval = steady_interval
-            print(f"Power: {power}, Start: {start}, End: {end}, Duration {duration}")
+            # print(f"Power: {power}, Start: {start}, End: {end}, Duration {duration}")
         section.appendChild(new_interval)
 
 
