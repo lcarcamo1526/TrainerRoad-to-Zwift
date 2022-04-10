@@ -1,6 +1,6 @@
 # Trainerroad to Zwift
 
-> Simple tool that let you download your trainerroad calendar including workouts to be used on Zwift
+> Download your training road workouts as zwo and import it as Zwift workouts!
 
 ## Run It
 
