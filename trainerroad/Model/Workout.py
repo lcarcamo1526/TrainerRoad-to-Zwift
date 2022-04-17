@@ -127,7 +127,7 @@ class Workout:
         """
         document = minidom.Document()
         workout_file = document.createElement(WORKOUT_FILE)
-        workout_section = document.createElement(WORKOUT)
+        workout_section = document.createElement(WORKOUT_STR)
         self.add_workout_details(workout_details, document=document, section=workout_file)
         self.add_workout_to_document(interval, document=document, section=workout_section, parent_section=workout_file)
         document.appendChild(workout_file)
