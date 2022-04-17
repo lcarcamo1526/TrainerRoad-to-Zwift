@@ -8,12 +8,11 @@ from http import HTTPStatus
 from io import StringIO
 
 import aiohttp
+import latest_user_agents
 import pandas as pd
 import requests
 from aiohttp import BasicAuth
 from lxml import etree
-from random_user_agent.params import SoftwareName, OperatingSystem
-from random_user_agent.user_agent import UserAgent
 
 from trainerroad.Utils.Str import USERNAME, PASSWORD
 from trainerroad.Utils.Warning import *
@@ -67,11 +66,8 @@ class TrainerRoad:
         r = self._session.post(self._login_url, data=data,
                                allow_redirects=False)
         headers = r.headers
-        software_names = [SoftwareName.CHROME.value, SoftwareName.FIREFOX.value]
-        operating_systems = [OperatingSystem.MAC_OS_X, OperatingSystem.WINDOWS.value]
-        user_agent_rotator = UserAgent(software_names=software_names, operating_systems=operating_systems, limit=100)
-        user_agent = user_agent_rotator.get_random_user_agent()
-        self.logger.warning(f"Current User Agent: {user_agent}")
+        user_agent = latest_user_agents.get_random_user_agent()
+        # self.logger.warning(f"Current User Agent: {user_agent}")
         headers["User-Agent"] = user_agent
         r.headers = headers
 
