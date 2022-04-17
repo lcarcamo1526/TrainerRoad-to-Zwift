@@ -43,6 +43,7 @@ class TrainerRoad:
     _download_tcx_url = 'http://www.trainerroad.com/cycling/rides/download'
     _workouts_url = 'https://api.trainerroad.com/api/careerworkouts'
     _calendar_url = "https://www.trainerroad.com/app/api/calendar/activities/"
+
     _workout_details = "https://www.trainerroad.com/app/api/workoutdetails/{}"
 
     # TODO move endpoints into singleton class
@@ -219,7 +220,6 @@ class TrainerRoad:
         values, token = self._read_profile()
         return values[self._weight]
 
-    @property
     def login_name(self) -> str:
         r = self._read_member_info()
         if bool(r):
@@ -276,10 +276,12 @@ class TrainerRoad:
         """
 
         if bool(username) is False:
-            username = self._display_name
+            username = self._read_member_info().get(USERNAME)
+            if bool(username) is False:
+                raise RuntimeError('Unable to get username')
         params = f'{username}?startDate={start_date}&endDate={end_date}'
-        self.logger.warning(f"{username}: training plan")
         endpoint = self._calendar_url + params
+        # self.logger.warning(f"{endpoint}")
         today = dt.datetime.now().strftime("%Y-%m-%d")
 
         response = self._session.get(endpoint)
