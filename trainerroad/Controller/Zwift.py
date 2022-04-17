@@ -68,7 +68,7 @@ class Zwift:
                 self.logger.warning(WARNING_DOWNLOADING_WORKOUTS.format(len(workouts)))
             response = await self.trainer.get_workouts_details(workouts=workouts)
             plan_dict = create_plan_dictionary(response)
-
+            # return plan_dict
             for date, workout_id in zip(calendar[DATE], calendar[ACTIVITY_ID]):
                 workout_plan = plan_dict.copy()
                 workout = workout_plan.get(workout_id)
@@ -96,6 +96,7 @@ class Zwift:
 
                             filename = f"{workout_name}.zwo"
                             out_path = os.path.join(self.temp_path, filename)
+                            logging.warning(f"Saving workout to {out_path}")
                             try:
                                 with open(out_path, "w") as f:
                                     f.write(doc_str)
