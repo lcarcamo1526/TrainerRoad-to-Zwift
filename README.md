@@ -9,6 +9,7 @@
 
 _Click on the button above, and replace your credentials and your desire parameters, wait an download the zip file_
 
+ **ATTENTION**: I strongly suggest clone this repo and run it in your local environment, sometimes it could fail because trainerroad already blocked binder IP.
 
 ## How to Use it?
 
