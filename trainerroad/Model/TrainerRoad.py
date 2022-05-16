@@ -42,6 +42,8 @@ class TrainerRoad:
     _download_tcx_url = 'http://www.trainerroad.com/cycling/rides/download'
     _workouts_url = 'https://api.trainerroad.com/api/careerworkouts'
     _calendar_url = "https://www.trainerroad.com/app/api/calendar/activities/"
+    _current_plan_url = "https://www.trainerroad.com/app/api/plan-builder/current-custom-plans"
+    _adapt_plans_url = "https://www.trainerroad.com/app/api/plan-adapt"
 
     _workout_details = "https://www.trainerroad.com/app/api/workoutdetails/{}"
 
@@ -55,6 +57,7 @@ class TrainerRoad:
         self.logger = logging.getLogger('')
         self.connect()
         self._display_name = self.login_name
+        self.adapt_current_plan()
 
     def connect(self):
         self._session = requests.Session()
@@ -248,6 +251,21 @@ class TrainerRoad:
         logger.info('Received info on {} workouts'.format(len(data)))
 
         return data
+
+    def get_current_training_plan(self) -> str:
+        res = self._session.get(self._current_plan_url)
+        if res.status_code is not HTTPStatus.OK:
+            response = res.json()[0]
+            return response.get('Id')
+        else:
+            raise RuntimeError(f"Unable to download (code = {res.status_code})")
+
+    def adapt_current_plan(self) -> bool:
+        current_plan = self.get_current_training_plan()
+        params = {'customPlanId': current_plan}
+        res = self._session.put(self._adapt_plans_url, params=params)
+        logging.info(f"Adapted plan:{res.status_code is HTTPStatus.OK}")
+        return res.status_code is HTTPStatus.OK
 
     def get_workout(self, guid):
         res = self._session.get(self._workout_url
