@@ -3,6 +3,7 @@ import os
 import traceback
 import zipfile
 from collections.abc import Iterable
+from typing import List
 
 import pandas as pd
 
@@ -56,23 +57,37 @@ class Zwift:
     async def export_training_plan(self, include_date: bool, start_date: str = None,
                                    end_date: str = None, compress=False, offset_years=3, optional_username="") -> bool:
         status = False
-        try:
-            current_date = dt.datetime.today()
-            if bool(start_date) is False:
-                start_date = current_date.strftime("%m-%d-%Y")
+        current_date = dt.datetime.today()
+        if bool(start_date) is False:
+            start_date = current_date.strftime("%m-%d-%Y")
 
-            if bool(end_date) is False:
-                result = current_date + dt.timedelta(days=365 * offset_years)
-                end_date = result.strftime("%m-%d-%Y")
-            calendar = self.trainer.get_training_plans(start_date=start_date, end_date=end_date,
-                                                       username=optional_username)
-            workouts = list(set(calendar[ACTIVITY_ID]))
+        if bool(end_date) is False:
+            result = current_date + dt.timedelta(days=365 * offset_years)
+            end_date = result.strftime("%m-%d-%Y")
+        calendar = self.trainer.get_training_plans(start_date=start_date, end_date=end_date,
+                                                   username=optional_username)
+        workouts = list(set(calendar[ACTIVITY_ID]))
+        if bool(workouts):
+            status = await self.download_and_save_workout(workouts, include_date, compress, calendar)
+
+        return status
+
+    async def download_and_save_workout(self, workouts: List[int], include_date: bool, compress=False,
+                                        calendar: pd.DataFrame = pd.DataFrame()) -> bool:
+        status = False
+        try:
+            if len(calendar) == 0:
+                # TODO Improve this workaround
+                calendar = pd.DataFrame()
+                calendar[ACTIVITY_ID] = workouts
+                calendar[DATE] = today
             if bool(workouts):
                 self.logger.warning(WARNING_DOWNLOADING_WORKOUTS.format(len(workouts)))
-            response = await self.trainer.get_workouts_details(workouts=workouts)
-            plan_dict = create_plan_dictionary(response)
+            responses = await self.trainer.get_workouts_details(workouts=workouts)
+            plan_dict = create_plan_dictionary(responses)
             self.save_workouts(plan_dict, calendar, include_date=include_date, compress=compress)
             status = True
+
         except Exception as e:
             self.logger.warning(traceback.format_exc())
             self.logger.error(e)
