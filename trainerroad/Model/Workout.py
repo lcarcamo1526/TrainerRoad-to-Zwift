@@ -1,3 +1,4 @@
+import logging
 from collections.abc import Iterable
 from collections.abc import Mapping
 from xml.dom import minidom
@@ -94,10 +95,9 @@ class Workout:
             # print(f"Power: {power}, Start: {start}, End: {end}, Duration {duration}")
         section.appendChild(new_interval)
 
-
         return section
 
-    def add_workout_details(self, details, section: Element, document: minidom.Document):
+    def add_workout_details(self, details: Mapping, section: Element, document: minidom.Document):
         """
 
         :param details:
@@ -106,17 +106,21 @@ class Workout:
         :return:
         """
         workout_name = details.get(WORKOUT_NAME)
-        description = details.get(WORKOUT_DESC)
-        author_section = document.createElement(AUTHOR)
-        author_section.appendChild(document.createTextNode(TRAINER_ROAD))
-        description_section = document.createElement(DESCRIPTION)
-        description_section.appendChild(document.createTextNode(description))
-        name_section = document.createElement(NAME)
-        name_section.appendChild(document.createTextNode(workout_name))
+        description = details.get(WORKOUT_DESC, "")
 
-        section.appendChild(author_section)
-        section.appendChild(description_section)
-        section.appendChild(name_section)
+        if bool(workout_name) and bool(description):
+            author_section = document.createElement(AUTHOR)
+            author_section.appendChild(document.createTextNode(TRAINER_ROAD))
+            description_section = document.createElement(DESCRIPTION)
+            description_section.appendChild(document.createTextNode(description))
+            name_section = document.createElement(NAME)
+            name_section.appendChild(document.createTextNode(workout_name))
+
+            section.appendChild(author_section)
+            section.appendChild(description_section)
+            section.appendChild(name_section)
+        else:
+            logging.error(f"Missing attributes: Workout Name: {workout_name}, Description: {description}")
 
     def convert_workout(self, interval: Iterable, workout_details: Mapping) -> minidom.Document:
         """
