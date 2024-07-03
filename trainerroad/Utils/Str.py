@@ -21,7 +21,7 @@ COOLDOWN = "Cooldown"
 RAMP = "Ramp"
 ACTIVITY_ID = "Activity.Id"
 DETAILS = 'Details'
-INTERVAL = 'intervalData'
+INTERVAL = 'IntervalData'
 ID = 'Id'
 
 USERNAME = 'Username'

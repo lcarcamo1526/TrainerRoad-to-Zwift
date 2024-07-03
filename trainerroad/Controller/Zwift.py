@@ -86,7 +86,6 @@ class Zwift:
             responses = await self.trainer.get_workouts_details(workouts=workouts)
             plan_dict = create_plan_dictionary(responses)
             self.save_workouts(plan_dict, calendar, include_date=include_date, compress=compress)
-            status = True
 
         except Exception as e:
             self.logger.warning(traceback.format_exc())
@@ -144,7 +143,7 @@ class Zwift:
                         self.logger.error(workout_name)
                         self.logger.error(traceback.format_exc())
                 else:
-                    logging.error(workout_name)
+                    logging.error(f"Error trying to decode interval data for: ${workout_name}")
 
         if compress:
             self.zipfile = os.path.join(self.output_path, OUTPUT_FILE)

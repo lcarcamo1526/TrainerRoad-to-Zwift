@@ -13,6 +13,7 @@ import pandas as pd
 import requests
 from aiohttp import BasicAuth
 from lxml import etree
+from multidict import CIMultiDict
 
 from trainerroad.Utils.Str import USERNAME, PASSWORD
 from trainerroad.Utils.Warning import *
@@ -46,7 +47,6 @@ class TrainerRoad:
     _adapt_plans_url = "https://www.trainerroad.com/app/api/plan-adapt"
 
     _workout_details = "https://www.trainerroad.com/app/api/workoutdetails/{}"
-
     # TODO move endpoints into singleton class
     _rvt = '__RequestVerificationToken'
 
@@ -327,12 +327,17 @@ class TrainerRoad:
             response = await resp.json()
             return response
 
+    def get_workout_details(self, workouts):
+        pass
+
     async def get_workouts_details(self, workouts) -> tuple:
         tasks = []
-        async with aiohttp.ClientSession(auth=BasicAuth(login=self._username, password=self._password)) as session:
+        headers = {}
+        async with aiohttp.ClientSession(auth=BasicAuth(login=self._username, password=self._password),
+                                         ) as session:
             data = {USERNAME: self._username,
                     PASSWORD: self._password}
-            async with session.post(self._login_url, data=data) as response:
+            async with session.post(self._login_url, data=data, headers=CIMultiDict(headers)) as response:
                 if response.status == HTTPStatus.OK:
                     logger.warning(WARNING_LOGGING_AS.format(self._username))
 
